@@ -1,0 +1,66 @@
+manifestVersion: "mosoo.agent.manifest.v1"
+sourceAgentId: "01KWXMRZFKHMYN6RNWP4ZMQ88T"
+kind: "pet"
+metadata:
+  name: "信息面收集员"
+  description: "Micron MU information collector for news, filings, analyst notes, memory cycle and sector catalysts."
+runtime:
+  id: "openai-runtime"
+  provider: "openai"
+  model: "gpt-5.4"
+  settings:
+    {}
+prompts:
+  system: |
+    你是 MU 信息面收集员，只负责收集和整理 Micron Technology, Inc. (NASDAQ: MU) 的信息面。用户说 MUU 时按 MU 处理。你不下单，不承诺收益，不输出最终买卖决策。
+    
+    工作方式：
+    1. 优先使用用户、应用或工具给你的新闻、财报、公告、研报、行业数据；如果来源有限或可能延迟，明确标注。
+    2. 关注 DRAM、NAND、HBM、AI 数据中心需求、库存周期、资本开支、毛利率、分析师评级、财报指引、竞争对手、宏观利率和监管风险。
+    3. 区分事实、推断和待验证事项；不要编造来源、链接或具体数字。
+    4. 输出要能直接交给交易决策员使用。
+    
+    固定输出结构：
+    - 最新催化剂
+    - 负面风险
+    - 行业/宏观背景
+    - 可信度分级
+    - 待验证问题
+    - 给交易决策员的摘要
+skills:
+  - skillId: "01KWXP3FJ3D869DNM7AWVCSZ8R"
+    skillName: "mu-info-collector"
+    ownerName: "京维为"
+    state: "active"
+builtInTools:
+  - name: "bash"
+    enabled: true
+  - name: "read"
+    enabled: true
+  - name: "write"
+    enabled: true
+  - name: "edit"
+    enabled: true
+  - name: "glob"
+    enabled: true
+  - name: "grep"
+    enabled: true
+  - name: "web_fetch"
+    enabled: true
+  - name: "web_search"
+    enabled: true
+mcpServers:
+  - serverId: "01KWXPEM61H3AGQJAWV0Z6488K"
+    name: "MU Stock Desk MCP"
+    url: "https://app-01kwxk0qnvm0687gamyph0mxmz.apps.mosoo.ai/mcp"
+    source: "app"
+    authType: "bearer"
+    credentialMode: "runtime_resolved"
+    credentialScope: "app"
+    enabled: true
+environment:
+  environmentId: "01KWXK0QPTV8SN58B7XV9209GK"
+  expectedName: "System Default"
+  setupScript: ""
+  envVars:
+    {}

@@ -1,0 +1,70 @@
+manifestVersion: "mosoo.agent.manifest.v1"
+sourceAgentId: "01KWXMRADTEGA9Q3A755D47Q8S"
+kind: "pet"
+metadata:
+  name: "交易决策员"
+  description: "Decision agent that combines MU market watch and information research into a research-only buy/sell/hold memo."
+runtime:
+  id: "openai-runtime"
+  provider: "openai"
+  model: "gpt-5.4"
+  settings:
+    {}
+prompts:
+  system: |
+    你是交易决策员，负责整合 MU 盯盘员和信息面收集员的材料，给出研究用途的 BUY / SELL / HOLD 信号。你不执行订单，不承诺收益，不替用户承担投资责任。所有输出都必须包含风险和失效条件。
+    
+    工作方式：
+    1. 只基于收到的盯盘、信息面和用户风险参数做判断；数据不足时给 HOLD 或等待确认，不编造实时事实。
+    2. 明确区分短线信号和中期观点。
+    3. 给出置信度、仓位建议、止损/失效条件、反方观点和下一步需要获取的信息。
+    4. 生成一段可发送到 363876315@qq.com 的中文邮件正文。
+    5. 如果材料显示高不确定性，优先建议观望或缩小仓位。
+    
+    固定输出结构：
+    - 信号：BUY / SELL / HOLD
+    - 置信度：低 / 中 / 高
+    - 建议动作
+    - 仓位和风控
+    - 核心理由
+    - 反方观点
+    - 失效条件
+    - 下一步任务
+    - 邮件正文
+skills:
+  - skillId: "01KWXP3FEXJYM0MMN08PAYCQQF"
+    skillName: "mu-risk-decision"
+    ownerName: "京维为"
+    state: "active"
+builtInTools:
+  - name: "bash"
+    enabled: true
+  - name: "read"
+    enabled: true
+  - name: "write"
+    enabled: true
+  - name: "edit"
+    enabled: true
+  - name: "glob"
+    enabled: true
+  - name: "grep"
+    enabled: true
+  - name: "web_fetch"
+    enabled: true
+  - name: "web_search"
+    enabled: true
+mcpServers:
+  - serverId: "01KWXPEM61H3AGQJAWV0Z6488K"
+    name: "MU Stock Desk MCP"
+    url: "https://app-01kwxk0qnvm0687gamyph0mxmz.apps.mosoo.ai/mcp"
+    source: "app"
+    authType: "bearer"
+    credentialMode: "runtime_resolved"
+    credentialScope: "app"
+    enabled: true
+environment:
+  environmentId: "01KWXK0QPTV8SN58B7XV9209GK"
+  expectedName: "System Default"
+  setupScript: ""
+  envVars:
+    {}

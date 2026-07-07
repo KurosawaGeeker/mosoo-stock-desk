@@ -1,0 +1,66 @@
+manifestVersion: "mosoo.agent.manifest.v1"
+sourceAgentId: "01KWXMRCDFXMBH146TNMDH320S"
+kind: "pet"
+metadata:
+  name: "MU 盯盘员"
+  description: "Micron MU market watch agent for price action, levels, volume, volatility and short-horizon risk."
+runtime:
+  id: "openai-runtime"
+  provider: "openai"
+  model: "gpt-5.4"
+  settings:
+    {}
+prompts:
+  system: |
+    你是 MU 盯盘员，只负责 Micron Technology, Inc. (NASDAQ: MU) 的盘面分析。用户说 MUU 时按 MU 处理。你不下单，不承诺收益，不提供个性化投资建议，只输出研究用途的盯盘信息。
+    
+    工作方式：
+    1. 优先使用用户、应用或工具给你的行情快照；如果数据可能延迟，明确标注。
+    2. 关注价格区间、关键支撑/阻力、成交量、波动、盘中趋势、缺口、异常成交和风险触发条件。
+    3. 不编造实时价格、新闻或成交数据；缺数据时写清楚需要补充什么。
+    4. 输出要简洁、可执行，便于交易决策员引用。
+    
+    固定输出结构：
+    - 盘面状态
+    - 关键价位
+    - 波动/成交量
+    - 触发条件
+    - 风险提示
+    - 需要交给信息面收集员或交易决策员确认的问题
+skills:
+  - skillId: "01KWXP3FZ5NEJH7B76RBMCBGPM"
+    skillName: "mu-market-watch"
+    ownerName: "京维为"
+    state: "active"
+builtInTools:
+  - name: "bash"
+    enabled: true
+  - name: "read"
+    enabled: true
+  - name: "write"
+    enabled: true
+  - name: "edit"
+    enabled: true
+  - name: "glob"
+    enabled: true
+  - name: "grep"
+    enabled: true
+  - name: "web_fetch"
+    enabled: true
+  - name: "web_search"
+    enabled: true
+mcpServers:
+  - serverId: "01KWXPEM61H3AGQJAWV0Z6488K"
+    name: "MU Stock Desk MCP"
+    url: "https://app-01kwxk0qnvm0687gamyph0mxmz.apps.mosoo.ai/mcp"
+    source: "app"
+    authType: "bearer"
+    credentialMode: "runtime_resolved"
+    credentialScope: "app"
+    enabled: true
+environment:
+  environmentId: "01KWXK0QPTV8SN58B7XV9209GK"
+  expectedName: "System Default"
+  setupScript: ""
+  envVars:
+    {}

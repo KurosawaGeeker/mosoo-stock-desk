@@ -42,6 +42,10 @@ export default {
     const url = new URL(request.url);
 
     try {
+      if (url.pathname === "/mcp") {
+        return handleMcpRequest(request, env);
+      }
+
       if (request.method === "GET" && url.pathname === "/") {
         return htmlResponse(renderHome());
       }
@@ -115,6 +119,190 @@ export default {
     }
   }
 };
+
+async function handleMcpRequest(request, env) {
+  if (request.method === "GET") {
+    return jsonResponse({
+      name: "mosoo-stock-desk-mcp",
+      protocol: "mcp-json-rpc",
+      tools: ["get_mu_quote", "get_mu_news", "draft_mu_decision_email"]
+    });
+  }
+
+  if (request.method !== "POST") {
+    return jsonResponse({ error: "method_not_allowed" }, 405);
+  }
+
+  if (env.MCP_BEARER_TOKEN) {
+    const expected = `Bearer ${env.MCP_BEARER_TOKEN}`;
+    if (request.headers.get("Authorization") !== expected) {
+      return jsonResponse({ error: "unauthorized" }, 401);
+    }
+  }
+
+  const payload = await readJson(request);
+  if (Array.isArray(payload)) {
+    const responses = await Promise.all(payload.map((item) => handleMcpMessage(item, env)));
+    return jsonResponse(responses);
+  }
+
+  return jsonResponse(await handleMcpMessage(payload, env));
+}
+
+async function handleMcpMessage(message, env) {
+  const id = message?.id ?? null;
+  const method = message?.method;
+
+  try {
+    if (method === "initialize") {
+      return mcpResult(id, {
+        protocolVersion: "2024-11-05",
+        capabilities: {
+          tools: {}
+        },
+        serverInfo: {
+          name: "mosoo-stock-desk",
+          version: "0.2.0"
+        }
+      });
+    }
+
+    if (method === "notifications/initialized") {
+      return mcpResult(id, {});
+    }
+
+    if (method === "tools/list") {
+      return mcpResult(id, { tools: mcpTools() });
+    }
+
+    if (method === "tools/call") {
+      const name = message?.params?.name;
+      const args = message?.params?.arguments || {};
+      const result = await callMcpTool(name, args, env);
+      return mcpResult(id, {
+        content: [
+          {
+            type: "text",
+            text: typeof result === "string" ? result : JSON.stringify(result, null, 2)
+          }
+        ],
+        isError: false
+      });
+    }
+
+    return mcpError(id, -32601, `Unsupported MCP method: ${method}`);
+  } catch (error) {
+    return mcpError(id, -32000, error.message || "MCP tool failed");
+  }
+}
+
+function mcpTools() {
+  return [
+    {
+      name: "get_mu_quote",
+      description: "Fetch a delayed Micron Technology (NASDAQ: MU) OHLCV quote snapshot.",
+      inputSchema: {
+        type: "object",
+        properties: {}
+      }
+    },
+    {
+      name: "get_mu_news",
+      description: "Fetch recent Micron Technology (NASDAQ: MU) headline RSS items.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          limit: {
+            type: "number",
+            description: "Maximum headline count to return."
+          }
+        }
+      }
+    },
+    {
+      name: "draft_mu_decision_email",
+      description: "Draft a Chinese research-only MU decision email without sending it.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          signal: { type: "string" },
+          confidence: { type: "string" },
+          market: { type: "string" },
+          news: { type: "string" },
+          riskProfile: { type: "string" },
+          decision: { type: "string" }
+        }
+      }
+    }
+  ];
+}
+
+async function callMcpTool(name, args, env) {
+  if (name === "get_mu_quote") {
+    return fetchMarketSnapshot();
+  }
+
+  if (name === "get_mu_news") {
+    const snapshot = await fetchNewsSnapshot();
+    const limit = Math.max(1, Math.min(Number(args.limit || 8), 20));
+    return {
+      ...snapshot,
+      items: snapshot.items.slice(0, limit)
+    };
+  }
+
+  if (name === "draft_mu_decision_email") {
+    return draftDecisionEmail(env, args);
+  }
+
+  throw statusError(400, "unknown_mcp_tool", `Unknown MCP tool: ${name}`);
+}
+
+function draftDecisionEmail(env, args) {
+  const to = env.MAIL_TO || MAIL_TO;
+  const signal = String(args.signal || "HOLD").toUpperCase();
+  const confidence = String(args.confidence || "未标注");
+  const subject = `MU 交易决策简报 - ${signal}`;
+  const text = [
+    "以下为研究用途简报，不执行交易，也不构成个性化投资建议。",
+    "",
+    `信号: ${signal}`,
+    `置信度: ${confidence}`,
+    "",
+    "盘面摘要:",
+    String(args.market || "未提供。"),
+    "",
+    "信息面摘要:",
+    String(args.news || "未提供。"),
+    "",
+    "风险参数:",
+    String(args.riskProfile || "未提供。"),
+    "",
+    "决策说明:",
+    String(args.decision || "未提供。")
+  ].join("\n");
+
+  return { to, subject, text };
+}
+
+function mcpResult(id, result) {
+  return {
+    jsonrpc: "2.0",
+    id,
+    result
+  };
+}
+
+function mcpError(id, code, message) {
+  return {
+    jsonrpc: "2.0",
+    id,
+    error: {
+      code,
+      message
+    }
+  };
+}
 
 async function handleAgentMessage(agent, body, env) {
   const text = String(body.text || "").trim();
