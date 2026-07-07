@@ -1,0 +1,14 @@
+schema = 1
+app_id = "01KWXK0QNVM0687GAMYPH0MXMZ"
+
+[[agents]]
+name = "MU 盯盘员"
+agent_id = "01KWXMRCDFXMBH146TNMDH320S"
+
+[[agents]]
+name = "信息面收集员"
+agent_id = "01KWXMRZFKHMYN6RNWP4ZMQ88T"
+
+[[agents]]
+name = "交易决策员"
+agent_id = "01KWXMRADTEGA9Q3A755D47Q8S"

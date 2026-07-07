@@ -1,0 +1,21 @@
+schema = 1
+name = "炒股3人组"
+
+[deploy]
+adapter = "cloudflare-workers"
+wrangler = "wrangler.toml"
+
+[[agents]]
+name = "MU 盯盘员"
+expose = "public_thread"
+env = "MOSOO_AGENT_MU_WATCH_URL"
+
+[[agents]]
+name = "信息面收集员"
+expose = "public_thread"
+env = "MOSOO_AGENT_INFO_URL"
+
+[[agents]]
+name = "交易决策员"
+expose = "public_thread"
+env = "MOSOO_AGENT_DECISION_URL"

@@ -1,0 +1,11 @@
+name = "mosoo-stock-desk"
+main = "src/worker.js"
+compatibility_date = "2026-07-07"
+workers_dev = true
+
+[observability]
+enabled = true
+
+[vars]
+MAIL_TO = "363876315@qq.com"
+MOSOO_API_BASE = "https://try.mosoo.ai/api/v1"
